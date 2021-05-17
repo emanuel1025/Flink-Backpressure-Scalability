@@ -1,23 +1,13 @@
+import com.beust.jcommander.JCommander;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
-import org.apache.flink.api.common.functions.FlatMapFunction;
-import org.apache.flink.api.java.DataSet;
-import org.apache.flink.api.java.ExecutionEnvironment;
-import org.apache.flink.api.java.operators.DataSource;
-import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.windowing.ProcessAllWindowFunction;
-import org.apache.flink.streaming.api.functions.windowing.ProcessWindowFunction;
 import org.apache.flink.streaming.api.windowing.assigners.SlidingProcessingTimeWindows;
-import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
-import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.util.Collector;
-import org.apache.flink.streaming.api.functions.KeyedProcessFunction.Context;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
-
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -26,22 +16,27 @@ import java.util.Random;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        System.out.println("hello world!");
+
+        CommandLine cli = new CommandLine();
+        JCommander cmdr = new JCommander(cli, args);
+        cmdr.usage();
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+
         //Parallelism Factor
-        System.out.println(env.getParallelism());
+        System.out.println("Parallelism Factor is " + env.getParallelism());
 
-
-        //BUILDING INPUT
+        //Building Input
         long startTime = System.currentTimeMillis();
         Random rd = new Random();
-        int nNodes = 25000000;
+        int nNodes = cli.numNodes;
+
+        //Number of nodes
+        System.out.println("Number of nodes generated is " + nNodes);
         List<double[]> paths = new ArrayList<>();
         for (int i = 0; i < nNodes; i++) {
             paths.add(new double[]{rd.nextDouble(), rd.nextDouble()});
         }
         long estimatedTime = System.currentTimeMillis() - startTime;
-        System.out.println(estimatedTime);
 
         DataStream<double[]> text = env.fromCollection(paths).assignTimestampsAndWatermarks(
                 WatermarkStrategy
